@@ -142,7 +142,7 @@ spec:
         app.kubernetes.io/instance: kubelet-serving-cert-approver
         app.kubernetes.io/name: kubelet-serving-cert-approver
     spec:
-      hostNetwork: true
+      # hostNetwork: true
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

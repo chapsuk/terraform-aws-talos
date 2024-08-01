@@ -70,7 +70,7 @@ module "elb_k8s_elb" {
   ]
 
   health_check = {
-    target              = "tcp:6443"
+    target              = "tcp:50000"
     interval            = 30
     healthy_threshold   = 2
     unhealthy_threshold = 2

@@ -7,7 +7,7 @@ module "talos_control_plane_nodes" {
   name                        = "${var.cluster_name}-control-plane-${count.index}"
   ami                         = data.aws_ami.talos.id
   instance_type               = var.control_plane.instance_type
-  subnet_id                   = element(data.aws_subnets.public.ids, count.index)
+  subnet_id                   = element(data.aws_subnets.private.ids, count.index)
   associate_public_ip_address = true
   tags                        = merge(var.tags, local.cluster_required_tags)
 
@@ -24,12 +24,12 @@ module "talos_worker_group" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "~> 5.5"
 
-  for_each = merge([for info in var.worker_groups : { for index in range(0, var.workers_count) : "${info.name}.${index}" => info }]...)
+  for_each = merge([for info in var.worker_groups : { for index in range(0, info.count == null ? var.workers_count : info.count) : "${info.name}.${index}" => info }]...)
 
   name                        = "${var.cluster_name}-worker-group-${each.value.name}-${trimprefix(each.key, "${each.value.name}.")}"
   ami                         = data.aws_ami.talos.id
   instance_type               = each.value.instance_type
-  subnet_id                   = element(data.aws_subnets.public.ids, tonumber(trimprefix(each.key, "${each.value.name}.")))
+  subnet_id                   = element(data.aws_subnets.private.ids, tonumber(trimprefix(each.key, "${each.value.name}.")))
   associate_public_ip_address = true
   tags                        = merge(each.value.tags, var.tags, local.cluster_required_tags)
 
@@ -62,7 +62,7 @@ data "talos_machine_configuration" "controlplane" {
 }
 
 data "talos_machine_configuration" "worker_group" {
-  for_each = merge([for info in var.worker_groups : { for index in range(0, var.workers_count) : "${info.name}.${index}" => info }]...)
+  for_each = merge([for info in var.worker_groups : { for index in range(0, info.count == null ? var.workers_count : info.count) : "${info.name}.${index}" => info }]...)
 
   cluster_name       = var.cluster_name
   cluster_endpoint   = "https://${module.elb_k8s_elb.elb_dns_name}"
@@ -90,7 +90,7 @@ resource "talos_machine_configuration_apply" "controlplane" {
 }
 
 resource "talos_machine_configuration_apply" "worker_group" {
-  for_each = merge([for info in var.worker_groups : { for index in range(0, var.workers_count) : "${info.name}.${index}" => info }]...)
+  for_each = merge([for info in var.worker_groups : { for index in range(0, info.count == null ? var.workers_count : info.count) : "${info.name}.${index}" => info }]...)
 
   client_configuration        = talos_machine_secrets.this.client_configuration
   machine_configuration_input = data.talos_machine_configuration.worker_group[each.key].machine_configuration

@@ -113,6 +113,7 @@ variable "worker_groups" {
     instance_type      = optional(string, "m5.large")
     config_patch_files = optional(list(string), [])
     tags               = optional(map(string), {})
+    count              = optional(number)
   }))
 
   default = [{

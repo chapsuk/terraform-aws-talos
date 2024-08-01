@@ -18,7 +18,15 @@ output "cluster_name" {
   value       = var.cluster_name
 }
 
-output "kubeconfig" {
-  description = "Kubeconfig content"
-  value       = data.talos_cluster_kubeconfig.this.kubeconfig_raw
+# output "kubeconfig" {
+#   description = "Kubeconfig content"
+#   value       = data.talos_cluster_kubeconfig.this.kubeconfig_raw
+# }
+
+output "node_private_ips" {
+  description = "Private IPS of cluster nodes"
+  value = concat(
+    [for idx, node in module.talos_control_plane_nodes: node.private_ip],
+    [for idx, node in module.talos_worker_group: node.private_ip],
+  )
 }
